@@ -71,7 +71,7 @@ _download_file() {
 
 ### MODULE ###
 _build_module() {
-local VERSION="3.2.27"
+local VERSION="2.6.22.18"
 local FILE="fuse.ko"
 local URL="https://github.com/droboports/kernel-drobo${DROBO}/releases/download/v${VERSION}/${FILE}"
 

@@ -26,9 +26,9 @@ mountpoint="/sys/fs/fuse/connections"
 # script hardening
 set -o errexit  # exit on uncaught error code
 set -o nounset  # exit on unset variable
-set -o pipefail # propagate last error code on pipe
 
 # ensure log folder exists
+if [[ -z "$(grep "^tmpfs" /proc/mounts)" ]]; then mount -t tmpfs tmpfs /tmp; fi
 logfolder="$(dirname ${logfile})"
 if [[ ! -d "${logfolder}" ]]; then mkdir -p "${logfolder}"; fi
 
@@ -44,15 +44,15 @@ set -o xtrace
 # _is_running
 # returns: 0 if pid is running, 1 if not running or if pidfile does not exist.
 _is_running() {
-  if [[ ! $(grep -qw fuse /proc/filesystems) ]]; then return 1; fi
-  if [[ ! $(grep -qw fusectl /proc/filesystems) ]]; then return 1; fi
+  if [[ -z "$(grep "^fusectl" /proc/mounts)" ]]; then return 1; fi
+  if [[ -z "$(lsmod | grep "^fuse")" ]]; then return 1; fi
 }
 
 start() {
   /bin/chmod 4755 "${prog_dir}/bin/fusermount"
   if [[ ! -c /dev/fuse ]]; then /bin/mknod -m 666 /dev/fuse c 10 229; fi
-  if [[ -z "$(lsmod | grep -w fuse)" ]]; then /sbin/insmod "${prog_dir}/modules/fuse.ko"; fi
-  if [[ -z "$(grep -w fusectl /proc/mounts)" ]]; then /bin/mount -t fusectl fusectl "${mountpoint}"; fi
+  if [[ -z "$(lsmod | grep "^fuse")" ]]; then /sbin/insmod "${prog_dir}/modules/fuse.ko"; fi
+  if [[ -z "$(grep "^fusectl" /proc/mounts)" ]]; then /bin/mount -t fusectl fusectl "${mountpoint}"; fi
 }
 
 _service_start() {
@@ -68,8 +68,9 @@ _service_start() {
 }
 
 _service_stop() {
-  if [[ -n "$(grep -w fusectl /proc/mounts)" ]]; then /bin/umount "${mountpoint}"; fi
-  if [[ -n "$(lsmod | grep -w fuse)" ]]; then /sbin/rmmod "${prog_dir}/modules/fuse.ko"; fi
+  if [[ -n "$(grep "^fusectl" /proc/mounts)" ]]; then /bin/umount "${mountpoint}"; fi
+  if [[ -d "/lib/modules/$(uname -r)" ]]; then mkdir -p "/lib/modules/$(uname -r)"; fi
+  if [[ -n "$(lsmod | grep "^fuse")" ]]; then /sbin/rmmod "${prog_dir}/modules/fuse.ko"; fi
 }
 
 _service_restart() {
