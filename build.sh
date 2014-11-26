@@ -79,7 +79,7 @@ _download_file() {
 # $2: url
 # $3: folder
 _download_file_in_folder() {
-  [[ -d "download/${3}" ]] && rm -vfr "download/${3}"
+  [[ ! -d "download/${3}" ]] && mkdir -p "download/${3}"
   [[ ! -f "download/${3}/${1}" ]] && wget -O "download/${3}/${1}" "${2}"
   return 0
 }

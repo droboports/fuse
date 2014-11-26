@@ -6,9 +6,9 @@ local VERSION="$1"
 local FILE="fuse.ko"
 local URL="https://github.com/droboports/kernel-drobo${DROBO}/releases/download/v${VERSION}/${FILE}"
 
-_download_file "${FILE}" "${URL}"
+_download_file_in_folder "${FILE}" "${URL}" "${VERSION}"
 mkdir -p "${DEST}/modules/${VERSION}"
-cp "download/${FILE}" "${DEST}/modules/${VERSION}/"
+cp "download/${VERSION}/${FILE}" "${DEST}/modules/${VERSION}/"
 }
 
 ### FUSE ###
@@ -29,7 +29,7 @@ popd
 ### BUILD ###
 _build() {
   _build_module 3.2.27
-  #_build_module 3.2.58
+  _build_module 3.2.58
   _build_fuse
   _package
 }
