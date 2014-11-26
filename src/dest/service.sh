@@ -44,15 +44,15 @@ set -o xtrace
 # _is_running
 # returns: 0 if pid is running, 1 if not running or if pidfile does not exist.
 _is_running() {
-  if [[ -z "$(grep "^fusectl" /proc/mounts)" ) ]]; then return 1; fi
-  if [[ -z "$(lsmod | grep "^fuse")" ) ]]; then return 1; fi
+  if [[ -z "$(grep ^fusectl /proc/mounts)" ]]; then return 1; fi
+  if [[ -z "$(lsmod | grep ^fuse)" ]]; then return 1; fi
 }
 
 start() {
   /bin/chmod 4755 "${prog_dir}/bin/fusermount"
   if [[ ! -c /dev/fuse ]]; then /bin/mknod -m 666 /dev/fuse c 10 229; fi
-  if [[ -z "$(lsmod | grep "^fuse")" ]]; then /sbin/insmod "${prog_dir}/modules/fuse.ko"; fi
-  if [[ -z "$(grep "^fusectl" /proc/mounts)" ]]; then /bin/mount -t fusectl fusectl "${mountpoint}"; fi
+  if [[ -z "$(lsmod | grep ^fuse)" ]]; then /sbin/insmod "${prog_dir}/modules/$(uname -r)/fuse.ko"; fi
+  if [[ -z "$(grep ^fusectl /proc/mounts)" ]]; then /bin/mount -t fusectl fusectl "${mountpoint}"; fi
 }
 
 _service_start() {
@@ -68,8 +68,8 @@ _service_start() {
 }
 
 _service_stop() {
-  if [[ -n "$(grep "^fusectl" /proc/mounts)" ]]; then /bin/umount "${mountpoint}"; fi
-  if [[ -n "$(lsmod | grep "^fuse")" ]]; then /sbin/rmmod "${prog_dir}/modules/fuse.ko"; fi
+  if [[ -n "$(grep ^fusectl /proc/mounts)" ]]; then /bin/umount "${mountpoint}"; fi
+  if [[ -n "$(lsmod | grep ^fuse)" ]]; then /sbin/rmmod "${prog_dir}/modules/$(uname -r)/fuse.ko"; fi
 }
 
 _service_restart() {
