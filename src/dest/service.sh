@@ -28,7 +28,7 @@ set -o errexit  # exit on uncaught error code
 set -o nounset  # exit on unset variable
 
 # ensure log folder exists
-if [[ -z "$(grep "^tmpfs" /proc/mounts)" ]]; then mount -t tmpfs tmpfs /tmp; fi
+if [[ -z "$(grep ^tmpfs /proc/mounts)" ]]; then mount -t tmpfs tmpfs /tmp; fi
 logfolder="$(dirname ${logfile})"
 if [[ ! -d "${logfolder}" ]]; then mkdir -p "${logfolder}"; fi
 
