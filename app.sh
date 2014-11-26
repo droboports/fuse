@@ -20,7 +20,7 @@ local URL="http://sourceforge.net/projects/fuse/files/fuse-2.X/${VERSION}/${FILE
 
 _download_tgz "${FILE}" "${URL}" "${FOLDER}"
 pushd target/"${FOLDER}"
-./configure --host=arm-none-linux-gnueabi --prefix="${DEST}" --mandir="${DEST}/man"
+./configure --host="${HOST}" --prefix="${DEST}" --mandir="${DEST}/man"
 make
 make install MOUNT_FUSE_PATH="${DEST}/sbin" INIT_D_PATH="${DEST}/etc/init.d" UDEV_RULES_PATH="${DEST}/etc/udev/rules.d"
 popd

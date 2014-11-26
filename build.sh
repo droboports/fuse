@@ -52,7 +52,7 @@ _download_app() {
   [[ ! -f "download/${1}" ]] && wget -O "download/${1}" "${2}"
   [[ -d "target/${3}" ]] && rm -vfr "target/${3}"
   mkdir -p "target/${3}"
-  tar -zxvf "download/${1}" -C target/${3}
+  tar -zxvf "download/${1}" -C "target/${3}"
   return 0
 }
 
