@@ -75,9 +75,9 @@ _service_stop() {
 }
 
 _service_restart() {
-  service_stop
+  _service_stop
   sleep 3
-  service_start
+  _service_start
 }
 
 _service_status() {
