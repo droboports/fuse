@@ -3,7 +3,9 @@
 # Fuse service
 
 # import DroboApps framework functions
-. /etc/service.subr
+source /etc/service.subr
+
+### app-specific section
 
 # DroboApp framework version
 framework_version="2.0"
@@ -20,26 +22,8 @@ statusfile="/tmp/DroboApps/${name}/status.txt"
 errorfile="/tmp/DroboApps/${name}/error.txt"
 
 # app-specific variables
-prog_dir=$(dirname $(readlink -fn ${0}))
+prog_dir="$(dirname $(readlink -fn ${0}))"
 mountpoint="/sys/fs/fuse/connections"
-
-# script hardening
-set -o errexit  # exit on uncaught error code
-set -o nounset  # exit on unset variable
-
-# ensure log folder exists
-if [[ -z "$(grep ^tmpfs /proc/mounts)" ]]; then mount -t tmpfs tmpfs /tmp; fi
-logfolder="$(dirname ${logfile})"
-if [[ ! -d "${logfolder}" ]]; then mkdir -p "${logfolder}"; fi
-
-# redirect all output to logfile
-exec 3>&1 1>> "${logfile}" 2>&1
-
-# log current date, time, and invocation parameters
-echo $(date +"%Y-%m-%d %H-%M-%S"): ${0} ${@}
-
-# enable script tracing
-set -o xtrace
 
 # _is_running
 # returns: 0 if pid is running, 1 if not running or if pidfile does not exist.
@@ -49,23 +33,41 @@ _is_running() {
 }
 
 start() {
+  set -u # exit on unset variable
+  set -e # exit on uncaught error code
+  set -x # enable script trace
   /bin/chmod 4755 "${prog_dir}/bin/fusermount"
   if [[ ! -c /dev/fuse ]]; then /bin/mknod -m 666 /dev/fuse c 10 229; fi
-  if [[ -d "/lib/modules/$(uname -r)" ]]; then mkdir -p "/lib/modules/$(uname -r)"; fi
   if [[ -z "$(lsmod | grep ^fuse)" ]]; then /sbin/insmod "${prog_dir}/modules/$(uname -r)/fuse.ko"; fi
   if [[ -z "$(grep ^fusectl /proc/mounts)" ]]; then /bin/mount -t fusectl fusectl "${mountpoint}"; fi
 }
 
+### common section
+
+# script hardening
+set -o errexit  # exit on uncaught error code
+set -o nounset  # exit on unset variable
+
+# ensure log folder exists
+if ! grep -q ^tmpfs /proc/mounts; then mount -t tmpfs tmpfs /tmp; fi
+logfolder="$(dirname ${logfile})"
+if [[ ! -d "${logfolder}" ]]; then mkdir -p "${logfolder}"; fi
+
+# redirect all output to logfile
+exec 3>&1 1>> "${logfile}" 2>&1
+
+# log current date, time, and invocation parameters
+echo $(date +"%Y-%m-%d %H-%M-%S"): ${0} ${@}
+
 _service_start() {
-  set +e
-  set +u
   if _is_running; then
     echo ${name} is already running >&3
     return 1
   fi
+  set +x # disable script trace
+  set +e # disable error code check
+  set +u # disable unset variable check
   start_service
-  set -u
-  set -e
 }
 
 _service_stop() {
@@ -86,9 +88,12 @@ _service_status() {
 
 _service_help() {
   echo "Usage: $0 [start|stop|restart|status]" >&3
-  set +e
+  set +e # disable error code check
   exit 1
 }
+
+# enable script tracing
+set -o xtrace
 
 case "${1:-}" in
   start|stop|restart|status) _service_${1} ;;
